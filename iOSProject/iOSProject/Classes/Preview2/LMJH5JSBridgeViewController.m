@@ -21,14 +21,18 @@
     
     self.jsBridge = [[WKWebViewJsBridge alloc] initWithWebView:self.webView delegate:self];
     
-    NSURL *fileUrl = [[NSBundle mainBundle] URLForResource:NSStringFromClass([self class]) withExtension:@"html"];
-    NSURL *jsCssSorceUrl = [NSURL URLWithString: [[[NSBundle mainBundle] URLForResource:NSStringFromClass([self class]) withExtension:@"html"].absoluteString stringByReplacingOccurrencesOfString:@"LMJH5JSBridgeViewController.html" withString:@""]];
+    
+    NSString *htmlPath = [@"JSBridge_js" stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.html", NSStringFromClass([self class])]];
+    
+    NSURL *fileUrl = [[NSBundle mainBundle] URLForResource:htmlPath withExtension:nil];
+    
+    NSURL *jsCssSorceUrl = [[NSBundle mainBundle] URLForResource:[htmlPath pathComponents].firstObject withExtension:nil];
     
     [self.webView loadFileURL:fileUrl allowingReadAccessToURL:jsCssSorceUrl];
     
     [self addData];
     
-    LMJWeakSelf(self);
+    LMJWeak(self);
     [self.jsBridge registerHandler:@"alertToast" handle:^(id data, void (^responseCallBack)(id responseData)) {
         [weakself.view makeToast:data duration:3 position:CSToastPositionCenter];
     }];
@@ -41,6 +45,12 @@
     }];
     
     [self.view addSubview:btn];
+
+//    <script type="text/javascript" src="./H5Bridge.js"></script>
+    // js 引入的第二种方式, 第一种方式是H5 页面直接引入
+//    NSString *jsbridge_js = [NSString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"JSBridge_js/H5Bridge.js" ofType:nil] encoding:NSUTF8StringEncoding error:nil];
+//    WKUserScript *userJs = [[WKUserScript alloc] initWithSource:jsbridge_js injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
+//    [self.webView.configuration.userContentController addUserScript:userJs];
 }
 
 - (void)addData
@@ -53,8 +63,8 @@
     [self.webView.scrollView scrollToTop];
     static int i = 0;
     i+=2;
-    LMJWeakSelf(self);
-    [self.jsBridge callHandler:@"insertContent" data:[NSString stringWithFormat:@"我是oc调用js传给js的内容, 内容: %zd", i] responseCallback:^(id responseData) {
+    LMJWeak(self);
+    [self.jsBridge callHandler:@"insertContent" data:[NSString stringWithFormat:@"我是oc调用js传给js的内容, 内容: %d", i] responseCallback:^(id responseData) {
         NSLog(@"%@", responseData);
         [weakself.view makeToast:responseData duration:3 position:CSToastPositionCenter];
     }];
